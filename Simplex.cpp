@@ -2,11 +2,20 @@
 
 Simplex::Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3)
 {
+    int m = m1 + m2 + m3;
+    for(int i = 0; i < m; i++)
+    {
+        if (a[i + 1][0] < 0.0)
+        {
+            throw std::invalid_argument("Bad input tableau");
+        }
+    }
+
     this->a = a;
     this->m1 = m1;
     this->m2 = m2;
     this->m3 = m3;
-    this->m = m1 + m2 + m3;
+    this->m = m;
     this->n = a[0].size() - 1;
 }
 
@@ -20,50 +29,64 @@ void Simplex::solve()
     icase = simplx();
     if (icase == 1)
     {
-        printf("\nunbounded objective function\n");
+        std::cout << std::endl << "unbounded objective function" << std::endl;
     }
     else if (icase == -1)
     {
-        printf("\nno solutions satisfy constraints given\n");
+        std::cout << std::endl << "no solutions satisfy constraints given" << std::endl;
     }
     else
     {
         nm1m2 = n + m1 + m2;
-        char txt[nm1m2][4] =
-            {"x1", "x2", "x3", "x4", "y1", "y2", "y3"}; // Cambiar
-        printf("\n%11s", " ");
+        std::string txt[nm1m2];
+        for(int i = 0; i < n; i++)
+        {
+            txt[i] = "x" + std::to_string(i + 1);
+        }
+        for(int i = n; i < nm1m2; i++)
+        {
+            txt[i] = "y" + std::to_string(i + 1 - n);
+        }
+
+        std::cout << std::string(11, ' ');
         for (int i = 0; i < n; i++)
         {
             if (izrov[i] < nm1m2)
             {
-                printf("%10s", txt[izrov[i]]);
+                txt[izrov[i]].insert(txt[izrov[i]].begin(), 10 - txt[izrov[i]].length(), ' ');
+                std::cout << txt[izrov[i]];
             }
         }
 
-        printf("\n");
+        std::cout << std::endl;
         for (int i = 0; i < m + 1; i++)
         {
             if (i == 0 || iposv[i - 1] < nm1m2)
             {
                 if (i > 0)
                 {
-                    printf("%s", txt[iposv[i - 1]]);
+                    std::cout << txt[iposv[i - 1]];
                 }
                 else
                 {
-                    printf("  ");
+                    std::cout << "  ";
                 }
 
-                printf("%10.2f", a[i][0]);
+                std::string ai0 = std::to_string(a[i][0]);
+                ai0 = ai0.substr(0, ai0.find(".")+3);
+                ai0.insert(ai0.begin(), 10 - ai0.length(), ' ');
+                std::cout << ai0;
                 for (int j = 1; j < n + 1; j++)
                 {
                     if (izrov[j - 1] < nm1m2)
                     {
-                        printf("%10.2f", a[i][j]);
+                        std::string aij = std::to_string(a[i][j]);
+                        aij = aij.substr(0, aij.find(".") + 3);
+                        aij.insert(aij.begin(), 10 - aij.length(), ' ');
+                        std::cout << aij;
                     }
                 }
-
-                printf("\n");
+                std::cout << std::endl;
             }
         }
     }
@@ -73,7 +96,6 @@ int Simplex::simplx()
 {
     int i, ip, is, k, kh, kp, nl1;
     float q1, bmax;
-    std::cout << "s1" << std::endl;
     std::vector<int> l1;
     std::vector<int> l3;
     nl1 = n;
@@ -82,26 +104,17 @@ int Simplex::simplx()
         l1.push_back(k);
         izrov.push_back(k);
     }
-    std::cout << "s2" << std::endl;
     for (i = 0; i < m; i++)
     {
-        if (a[i + 1][0] < 0.0) // Borrar esto y verificar en constructor
-        {
-            // nrerror("Bad input tableau in simplx");
-            std::cout << "Bad input tableau in simplx" << std::endl;
-            return -2;
-        }
         iposv.push_back(n + i);
     }
-    std::cout << "s3" << std::endl;
+
     if (m2 + m3)
     {
-        std::cout << "if.1" << std::endl;
         for (i = 0; i < m2; i++)
         {
             l3.push_back(1);
         }
-        std::cout << "if.2" << std::endl;
         for (k = 0; k < n + 1; k++)
         {
             q1 = 0.0;
@@ -111,21 +124,16 @@ int Simplex::simplx()
             }
             a[m + 1][k] = -q1; // m + 1 -> m + 2 (?
         }
-        printA();
-        std::cout << "if.3" << std::endl;
-        bool p = true;
+
         for (;;)
         {
-            if(p) std::cout << "if.3.for.1" << std::endl;
             simp1(m + 1, l1, nl1, 0, &kp, &bmax);
-            if(p) std::cout << "if.3.for.2" << std::endl;
             if (bmax <= EPS && a[m + 1][0] < -EPS) // m + 1 -> m + 2 (?
             {
                 return -1; // icase -1
             }
             else if (bmax <= EPS && a[m + 1][0] <= EPS) // m + 1 -> m + 2 (?
             {
-                if(p)std::cout << "if.3.for.3" << std::endl;
                 for (ip = m1 + m2; ip < m; ip++)
                 {
                     if (iposv[ip] == ip + n)
@@ -137,7 +145,6 @@ int Simplex::simplx()
                         }
                     }
                 }
-                if(p)std::cout << "if.3.for.4" << std::endl;
                 for (i = m1; i < m1 + m2; i++)
                 {
                     if (l3[i - m1] == 1)
@@ -148,24 +155,17 @@ int Simplex::simplx()
                         }
                     }
                 }
-                if (p)printA();
-                if(p)std::cout << "if.3.for.5" << std::endl;
                 break;
             }
             simp2(&ip, kp);
-            if(p)std::cout << "if.3.for.6" << std::endl;
             if (ip == -1)
             {
                 return -1; // icase -1
             }
         one:
-            if(p)std::cout << "if.3.for.7" << std::endl;
             simp3(m + 1, n, ip, kp);
-            if (p)printA();
-            if(p)std::cout << "if.3.for.8" << std::endl;
             if (iposv[ip] >= (n + m1 + m2)) // n + m1 + m2 |->| n + m1 + m2 + 1
             {
-                if(p)std::cout << "if.3.for.9" << std::endl;
                 for (k = 0; k < nl1; k++)
                 {
                     if (l1[k] == kp)
@@ -173,17 +173,15 @@ int Simplex::simplx()
                         break;
                     }
                 }
-                if(p)std::cout << "if.3.for.10" << std::endl;
+
                 --nl1;
                 for (is = k; is < nl1; is++)
                 {
                     l1[is] = l1[is + 1];
                 }
-                if(p)std::cout << "if.3.for.11" << std::endl;
             }
             else
             {
-                if(p)std::cout << "if.3.for.12" << std::endl;
                 kh = iposv[ip] - m1 - n;
                 if (kh >= 0 && l3[kh]) // kh >= 0 |->| kh >= 1
                 {
@@ -194,38 +192,31 @@ int Simplex::simplx()
                         a[i][kp + 1] = -a[i][kp + 1];
                     }
                 }
-                if (p)printA();
-                if(p)std::cout << "if.3.for.13" << std::endl;
             }
             is = izrov[kp];
             izrov[kp] = iposv[ip];
             iposv[ip] = is;
-            // p = false;
         }
-        std::cout << "if.4" << std::endl;
     }
-    std::cout << "s4" << std::endl;
+
     for (;;)
     {
-        std::cout << "for2.1" << std::endl;
         simp1(0, l1, nl1, 0, &kp, &bmax);
         if (bmax <= EPS)
         {
             return 0; // icase = 0
         }
-        std::cout << "for2.2" << std::endl;
+
         simp2(&ip, kp);
         if (ip == -1)
         {
             return 1; // icase  = 1
         }
-        std::cout << "for2.3" << std::endl;
+
         simp3(m, n, ip, kp);
-        printA();
         is = izrov[kp];
         izrov[kp] = iposv[ip];
         iposv[ip] = is;
-        std::cout << "for2.4" << std::endl;
     }
 }
 
@@ -234,27 +225,27 @@ void Simplex::simp1(int mm, std::vector<int> ll, int nll, int iabf, int *kp, flo
     int k;
     float test;
 
-    if (nll <= 0) // <=  ->   < (?
+    if (nll <= 0)
     {
         *bmax = 0.0;
     }
     else
     {
         *kp = ll[0];
-        *bmax = a[mm][*kp + 1]; // kp + 1 -> kp (?
+        *bmax = a[mm][*kp + 1];
         for (k = 1; k < nll; k++)
         {
             if (iabf == 0)
             {
-                test = a[mm][ll[k] + 1] - (*bmax); // ll[k] + 1 -> ll[k] (?
+                test = a[mm][ll[k] + 1] - (*bmax);
             }
             else
             {
-                test = fabs(a[mm][ll[k]] + 1) - fabs(*bmax); // ll[k] + 1 -> ll[k] (?
+                test = fabs(a[mm][ll[k]] + 1) - fabs(*bmax);
             }
             if (test > 0.0)
             {
-                *bmax = a[mm][ll[k] + 1]; // ll[k] + 1 -> ll[k] (?
+                *bmax = a[mm][ll[k] + 1];
                 *kp = ll[k];
             }
         }
@@ -267,8 +258,8 @@ void Simplex::simp2(int *ip, int kp)
     int k, i;
     float qp, q0, q, q1;
 
-    kp = kp + 1; // kp + 1 (?
-    *ip = -1;     // ip = 0 -> ip = -1 y verificar en solve simplx
+    kp = kp + 1;
+    *ip = -1;
     for (i = 0; i < m; i++)
     {
         if (a[i + 1][kp] < -EPS)
@@ -277,7 +268,7 @@ void Simplex::simp2(int *ip, int kp)
         }
     }
 
-    if (i > m) // i >= m   ->  i > m   ||  -> i + 1 > m
+    if (i > m)
     {
         return;
     }
@@ -354,6 +345,35 @@ double Simplex::fabs(double x)
     }
 
     return x;
+}
+
+void Simplex::insertConstraint(float b, int var, int type)
+{
+    std::vector<float> constraint (this->a[0].size(), 0.0);
+    constraint[0] = b;
+    constraint[var] = -1.0; // ?
+    switch (type)
+    {
+    case 1:
+        this->a.insert(this->a.begin() + m1 + 1, constraint);
+        break;
+    case 2:
+        this->a.insert(this->a.begin() + m1 + m2 + 1, constraint);
+        break;
+    case 3:
+        this->a.insert(this->a.end() + m + 1, constraint);
+        break;
+    default:
+        break;
+    }
+}
+
+Simplex *Simplex::copy()
+{
+    Simplex *s = new Simplex(a, m1, m2, m3);
+    s->izrov = this->izrov;
+    s->iposv = this->iposv;
+    return s;
 }
 
 void Simplex::printA()

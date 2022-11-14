@@ -25,5 +25,7 @@ public:
     Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3);
     ~Simplex();
     void solve();
+    void insertConstraint(float b, int var, int type);
+    Simplex *copy();
     void printA();
 };
