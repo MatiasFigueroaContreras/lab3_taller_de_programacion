@@ -3,29 +3,40 @@
 #include <string>
 #define EPS 1.0e-6
 
+/*
+    Descripcion de la clase Simplex:
+    Esta clase representa un solucionador de problemas de optimizacion
+    lineal, mediante el metodo Simplex. este busca maximizar una
+    funcion con restricciones asociadas.
+*/
 class Simplex
 {
 private:
-    int m;
-    int n;
+    int m; // Numero de restricciones
+    int n; // Numero de variables
+    bool isSolved;
+    int icase;
+    std::vector<int> izrov;
+    std::vector<int> iposv;
     int simplx();
-    void simp1(int mm, std::vector<int> ll, int nll, int iabf, int *kp, float *bmax);
-    void simp2(int *ip, int kp);
-    void simp3(int i1, int k1, int ip, int kp);
-    double fabs(double x);
+    void maxValue(int mm, std::vector<int> ll, int nll, int iabf, int *kp, float *bmax);
+    void locatePivot(int *ip, int kp);
+    void exchangeParameters(int i1, int k1, int ip, int kp);
+    float fabs(float x);
 
 public:
-    std::vector<std::vector<float>> a;
+    std::vector<std::vector<float>> initialA; // Matriz del problema.
+    std::vector<std::vector<float>> a; // Matriz en donde se genera la solucion.
     int m1; // numero de restricciones <=
     int m2; // ... >=
     int m3; // igualdad
-    std::vector<int> izrov;
-    std::vector<int> iposv;
 
+    Simplex(std::string file_name);
     Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3);
     ~Simplex();
-    void solve();
+    std::vector<float> solve();
     void insertConstraint(float b, int var, int type);
     Simplex *copy();
-    void printA();
+    void printProblemMatrix();
+    void printSolution();
 };

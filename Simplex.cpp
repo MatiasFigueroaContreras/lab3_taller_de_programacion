@@ -1,97 +1,100 @@
 #include "Simplex.h"
 
+/*
+    Metodo: Constructor
+    Descripcion: este metodo permite iniciar un Simplex, recibiendo
+        el nombre de un archivo, el cual contendra los datos necesarios
+        para la creacion de el Simplex.
+    Parametros:
+        -filename: nombre del archivo que contendra los datos.
+    Retorno: El objeto creado.
+*/
+Simplex::Simplex(std::string fileName)
+{
+}
+
+/*
+    Metodo: Constructor
+    Descripcion: este metodo permite iniciar un Simplex, recibiendo
+        los datos necesarios para la creacion de este.
+    Parametros:
+        -a: Matriz con los valores que acompanian a la funcion a maximizar
+            y a las restricciones del problema a resolver.
+        -m1: numero de restricciones de tipo 1 (<=)
+        -m2: numero de restricciones de tipo 2 (>=)
+        -m3: numero de restricciones de tipo 3 (==)
+    Retorno: El objeto creado.
+*/
 Simplex::Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3)
 {
     int m = m1 + m2 + m3;
-    for(int i = 0; i < m; i++)
+    for (int i = 1; i <= m; i++)
     {
-        if (a[i + 1][0] < 0.0)
+        if (a[i][0] < 0.0)
         {
+            // Error al crear el Simplex, ya que no se permiten
+            // constantes negativas para las restricciones.
             throw std::invalid_argument("Bad input tableau");
         }
     }
 
+    this->initialA = a;
     this->a = a;
     this->m1 = m1;
     this->m2 = m2;
     this->m3 = m3;
     this->m = m;
     this->n = a[0].size() - 1;
+    this->isSolved = false;
 }
 
 Simplex::~Simplex()
 {
 }
 
-void Simplex::solve()
+/*
+    Descripcion: este metodo permite resolver el problema invocando al
+        metodo de simplex, imprimiendo la matriz solucion y retornando
+        un arreglo con el valor maximizado y los valores de los parametros
+        de la funcion a maximizar.
+    Parametros: No posee.
+    Retorno: Arreglo con el valor maximizado y los valores de los
+        parametros de la funcion a maximizar.
+*/
+std::vector<float> Simplex::solve()
 {
-    int icase, nm1m2;
     icase = simplx();
-    if (icase == 1)
+    isSolved = true;
+    printSolution();
+    if (icase != 0)
     {
-        std::cout << std::endl << "unbounded objective function" << std::endl;
+        std::vector<float> p;
+        return p; // No hay solucion
     }
-    else if (icase == -1)
+
+    std::vector<float> parameters(n + 1, 0.0);
+    parameters[0] = a[0][0];
+    for (int i = 0; i < n && i < m; i++)
     {
-        std::cout << std::endl << "no solutions satisfy constraints given" << std::endl;
-    }
-    else
-    {
-        nm1m2 = n + m1 + m2;
-        std::string txt[nm1m2];
-        for(int i = 0; i < n; i++)
+        if (iposv[i] < n)
         {
-            txt[i] = "x" + std::to_string(i + 1);
-        }
-        for(int i = n; i < nm1m2; i++)
-        {
-            txt[i] = "y" + std::to_string(i + 1 - n);
-        }
-
-        std::cout << std::string(11, ' ');
-        for (int i = 0; i < n; i++)
-        {
-            if (izrov[i] < nm1m2)
-            {
-                txt[izrov[i]].insert(txt[izrov[i]].begin(), 10 - txt[izrov[i]].length(), ' ');
-                std::cout << txt[izrov[i]];
-            }
-        }
-
-        std::cout << std::endl;
-        for (int i = 0; i < m + 1; i++)
-        {
-            if (i == 0 || iposv[i - 1] < nm1m2)
-            {
-                if (i > 0)
-                {
-                    std::cout << txt[iposv[i - 1]];
-                }
-                else
-                {
-                    std::cout << "  ";
-                }
-
-                std::string ai0 = std::to_string(a[i][0]);
-                ai0 = ai0.substr(0, ai0.find(".")+3);
-                ai0.insert(ai0.begin(), 10 - ai0.length(), ' ');
-                std::cout << ai0;
-                for (int j = 1; j < n + 1; j++)
-                {
-                    if (izrov[j - 1] < nm1m2)
-                    {
-                        std::string aij = std::to_string(a[i][j]);
-                        aij = aij.substr(0, aij.find(".") + 3);
-                        aij.insert(aij.begin(), 10 - aij.length(), ' ');
-                        std::cout << aij;
-                    }
-                }
-                std::cout << std::endl;
-            }
+            parameters[iposv[i] + 1] = a[i + 1][0];
         }
     }
+
+    return parameters;
 }
 
+/*
+    Descripcion: este metodo resuelve el problema de maximizacion
+        dado la funcion y las restricciones dadas en la creacion
+        del objeto, todo mediante el metodo simplex.
+    Parametros: No posee.
+    Retorno:
+        - 0: Fue posible resolver el problema.
+        - 1: No existe un limite para la funcion a maximizar.
+        - -1: No existe solucion que cumpla con las restricciones dadas.
+*/
 int Simplex::simplx()
 {
     int i, ip, is, k, kh, kp, nl1;
@@ -99,6 +102,8 @@ int Simplex::simplx()
     std::vector<int> l1;
     std::vector<int> l3;
     nl1 = n;
+    izrov.clear();
+    iposv.clear();
     for (k = 0; k < n; k++)
     {
         l1.push_back(k);
@@ -122,23 +127,23 @@ int Simplex::simplx()
             {
                 q1 += a[i + 1][k];
             }
-            a[m + 1][k] = -q1; // m + 1 -> m + 2 (?
+            a[m + 1][k] = -q1;
         }
 
         for (;;)
         {
-            simp1(m + 1, l1, nl1, 0, &kp, &bmax);
-            if (bmax <= EPS && a[m + 1][0] < -EPS) // m + 1 -> m + 2 (?
+            maxValue(m + 1, l1, nl1, 0, &kp, &bmax);
+            if (bmax <= EPS && a[m + 1][0] < -EPS)
             {
                 return -1; // icase -1
             }
-            else if (bmax <= EPS && a[m + 1][0] <= EPS) // m + 1 -> m + 2 (?
+            else if (bmax <= EPS && a[m + 1][0] <= EPS)
             {
                 for (ip = m1 + m2; ip < m; ip++)
                 {
                     if (iposv[ip] == ip + n)
                     {
-                        simp1(ip, l1, nl1, 1, &kp, &bmax);
+                        maxValue(ip, l1, nl1, 1, &kp, &bmax);
                         if (bmax > EPS)
                         {
                             goto one;
@@ -157,14 +162,14 @@ int Simplex::simplx()
                 }
                 break;
             }
-            simp2(&ip, kp);
+            locatePivot(&ip, kp);
             if (ip == -1)
             {
                 return -1; // icase -1
             }
         one:
-            simp3(m + 1, n, ip, kp);
-            if (iposv[ip] >= (n + m1 + m2)) // n + m1 + m2 |->| n + m1 + m2 + 1
+            exchangeParameters(m + 1, n, ip, kp);
+            if (iposv[ip] >= (n + m1 + m2))
             {
                 for (k = 0; k < nl1; k++)
                 {
@@ -183,11 +188,11 @@ int Simplex::simplx()
             else
             {
                 kh = iposv[ip] - m1 - n;
-                if (kh >= 0 && l3[kh]) // kh >= 0 |->| kh >= 1
+                if (kh >= 0 && l3[kh])
                 {
                     l3[kh] = 0;
-                    ++a[m + 1][kp + 1];          // m + 1 -> m + 2 (?
-                    for (i = 0; i < m + 2; i++) // m + 1 -> m + 2 (?
+                    ++a[m + 1][kp + 1];
+                    for (i = 0; i < m + 2; i++)
                     {
                         a[i][kp + 1] = -a[i][kp + 1];
                     }
@@ -201,26 +206,42 @@ int Simplex::simplx()
 
     for (;;)
     {
-        simp1(0, l1, nl1, 0, &kp, &bmax);
+        maxValue(0, l1, nl1, 0, &kp, &bmax);
         if (bmax <= EPS)
         {
             return 0; // icase = 0
         }
 
-        simp2(&ip, kp);
+        locatePivot(&ip, kp);
         if (ip == -1)
         {
             return 1; // icase  = 1
         }
 
-        simp3(m, n, ip, kp);
+        exchangeParameters(m, n, ip, kp);
         is = izrov[kp];
         izrov[kp] = iposv[ip];
         iposv[ip] = is;
     }
 }
 
-void Simplex::simp1(int mm, std::vector<int> ll, int nll, int iabf, int *kp, float *bmax)
+/*
+    Descripcion: este metodo calcula el valor mayor de los elementos
+        de la fila mm, cuyo indice esta en el vector ll dado (corrido en 1 posicion
+        ya que el primer elemento corresponde a una constante y los valores se
+        estan guardando en base a los parametros x1, x2 ...), guardando el valor
+        en bmax y el indice en kp, esto considerando el valor absoluto del valor
+        si se entrega iabf distinto de 0, en otro caso se toma el valor tal cual.
+    Parametros:
+        -mm: fila a revisar de la matriz.
+        -ll: vector con las posciones de la columna a revisar en la matriz.
+        -nll: largo del vector ll
+        -iabf: valor que indica si se desea calcular con el valor absoluto o no.
+        -kp: direccion donde se guardara la posicion del elemento con mayor valor.
+        -bmax: direccion donde se guardara el valor maximo encontrado.
+    Retorno: No posee.
+*/
+void Simplex::maxValue(int mm, std::vector<int> ll, int nll, int iabf, int *kp, float *bmax)
 {
     int k;
     float test;
@@ -241,8 +262,9 @@ void Simplex::simp1(int mm, std::vector<int> ll, int nll, int iabf, int *kp, flo
             }
             else
             {
-                test = fabs(a[mm][ll[k]] + 1) - fabs(*bmax);
+                test = fabs(a[mm][ll[k] + 1]) - fabs(*bmax);
             }
+
             if (test > 0.0)
             {
                 *bmax = a[mm][ll[k] + 1];
@@ -252,7 +274,15 @@ void Simplex::simp1(int mm, std::vector<int> ll, int nll, int iabf, int *kp, flo
     }
 }
 
-void Simplex::simp2(int *ip, int kp)
+/*
+    Descripcion: este metodo encuentra la fila en donde se 
+        encuentra el elemento que sirve como pivote.
+    Parametros:
+        -ip: direccion donde se guardara la fila del elemento pivote.
+        -kp: numero de la columna en donde encontrar el pivote.
+    Retorno: No posee.
+*/
+void Simplex::locatePivot(int *ip, int kp)
 {
 
     int k, i;
@@ -305,7 +335,18 @@ void Simplex::simp2(int *ip, int kp)
     }
 }
 
-void Simplex::simp3(int i1, int k1, int ip, int kp)
+/*
+    Descripcion: este metodo realiza operaciones matriciales, para
+        intercambiar un parametro perteneciente a la restricciones m3
+        con los parametros restantes.
+    Parametros:
+        -i1: numero de filas a explorar.
+        -k1: numero de columnas a explorar.
+        -ip: numero de la fila del pivote.
+        -kp: numero de la columna del pivote.
+    Retorno: No posee.
+*/
+void Simplex::exchangeParameters(int i1, int k1, int ip, int kp)
 {
     int kk, ii;
     float piv;
@@ -337,53 +378,186 @@ void Simplex::simp3(int i1, int k1, int ip, int kp)
     a[ip + 1][kp + 1] = piv;
 }
 
-double Simplex::fabs(double x)
+/*
+    Descripcion: este metodo calcula el valor absoluto de un
+        valor dado.
+    Parametros:
+        -x: valor a calcular el valor absoluto
+    Retorno: valor absoluto de x.
+*/
+float Simplex::fabs(float x)
 {
     if (x < 0.0)
     {
-        return x * -1;
+        return x * -1.0;
     }
 
     return x;
 }
 
+/*
+    Descripcion: este metodo permite insertar una restriccion
+        a la matriz que representa el problema.
+    Parametros:
+        -b: valor constante de la restriccion.
+        -var: variable/parametro a la que se agrega la restriccion
+        -type: tipo de la restriccion, este puede ser:
+            .1: var <= b
+            .2: var >= b
+            .3: var == b
+    Retorno: No posee.
+*/
 void Simplex::insertConstraint(float b, int var, int type)
 {
-    std::vector<float> constraint (this->a[0].size(), 0.0);
+    if (var == 0 || var > n || b < 0.0)
+    {
+        return;
+    }
+
+    std::vector<float> constraint(n + 1, 0.0);
     constraint[0] = b;
-    constraint[var] = -1.0; // ?
+    constraint[var] = -1.0;
+
     switch (type)
     {
     case 1:
-        this->a.insert(this->a.begin() + m1 + 1, constraint);
+        std::cout << "p" << std::endl;
+        this->initialA.insert(this->initialA.begin() + m1 + 1, constraint);
+        m1++;
         break;
     case 2:
-        this->a.insert(this->a.begin() + m1 + m2 + 1, constraint);
+        this->initialA.insert(this->initialA.begin() + m1 + m2 + 1, constraint);
+        m2++;
         break;
     case 3:
-        this->a.insert(this->a.end() + m + 1, constraint);
+        this->initialA.insert(this->initialA.begin() + m + 1, constraint);
+        m3++;
         break;
     default:
+        return;
         break;
     }
+    m++;
+    isSolved = false;
+    a = initialA;
 }
 
+/*
+    Descripcion: este metodo permite copiar el objeto con sus
+        respectivos valores.
+    Parametros: No tiene.
+    Retorno: La direccion del objeto creado con los valores
+        del objeto copiado.
+*/
 Simplex *Simplex::copy()
 {
-    Simplex *s = new Simplex(a, m1, m2, m3);
+    Simplex *s = new Simplex(initialA, m1, m2, m3);
     s->izrov = this->izrov;
     s->iposv = this->iposv;
+    s->isSolved = this->isSolved;
+    s->icase = this->icase;
+    s->a = this->a;
     return s;
 }
 
-void Simplex::printA()
+/*
+    Descripcion: este metodo permite imprimir la matriz
+        que representa al problema.
+    Parametros: No tiene.
+    Retorno: No tiene.
+*/
+void Simplex::printProblemMatrix()
 {
-    for (std::size_t i = 0; i < a.size(); i++)
+    for (std::size_t i = 0; i < initialA.size(); i++)
     {
-        for (std::size_t j = 0; j < a[0].size(); j++)
+        for (std::size_t j = 0; j < initialA[0].size(); j++)
         {
-            printf("%10.2f", a[i][j]);
+            std::string aij = std::to_string(initialA[i][j]);
+            aij = aij.substr(0, aij.find(".") + 3);
+            aij.insert(aij.begin(), 10 - aij.length(), ' ');
+            std::cout << aij;
         }
-        printf("\n");
+        std::cout << std::endl;
+    }
+}
+
+/*
+    Descripcion: este metodo permite imprimir la matriz solucion,
+        esto si es que fue resuelto en problema.
+    Parametros: No tiene.
+    Retorno: No tiene.
+*/
+void Simplex::printSolution()
+{
+    if (isSolved)
+    {
+        int nm1m2;
+        if (icase == 1)
+        {
+            std::cout << "unbounded objective function" << std::endl;
+        }
+        else if (icase == -1)
+        {
+            std::cout << "no solutions satisfy constraints given" << std::endl;
+        }
+        else
+        {
+            nm1m2 = n + m1 + m2;
+            std::string txt[nm1m2];
+            for (int i = 0; i < n; i++)
+            {
+                txt[i] = "x" + std::to_string(i + 1);
+            }
+            for (int i = n; i < nm1m2; i++)
+            {
+                txt[i] = "y" + std::to_string(i + 1 - n);
+            }
+
+            std::cout << std::string(11, ' ');
+            for (int i = 0; i < n; i++)
+            {
+                if (izrov[i] < nm1m2)
+                {
+                    txt[izrov[i]].insert(txt[izrov[i]].begin(), 10 - txt[izrov[i]].length(), ' ');
+                    std::cout << txt[izrov[i]];
+                }
+            }
+
+            std::cout << std::endl;
+            for (int i = 0; i < m + 1; i++)
+            {
+                if (i == 0 || iposv[i - 1] < nm1m2)
+                {
+                    if (i > 0)
+                    {
+                        std::cout << txt[iposv[i - 1]];
+                    }
+                    else
+                    {
+                        std::cout << "  ";
+                    }
+
+                    std::string ai0 = std::to_string(a[i][0]);
+                    ai0 = ai0.substr(0, ai0.find(".") + 3);
+                    ai0.insert(ai0.begin(), 10 - ai0.length(), ' ');
+                    std::cout << ai0;
+                    for (int j = 1; j < n + 1; j++)
+                    {
+                        if (izrov[j - 1] < nm1m2)
+                        {
+                            std::string aij = std::to_string(a[i][j]);
+                            aij = aij.substr(0, aij.find(".") + 3);
+                            aij.insert(aij.begin(), 10 - aij.length(), ' ');
+                            std::cout << aij;
+                        }
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
+    }
+    else
+    {
+        std::cout << "It is not solved" << std::endl;
     }
 }

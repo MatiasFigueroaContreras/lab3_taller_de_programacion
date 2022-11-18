@@ -29,7 +29,15 @@ int main()
 
     std::cout << "\t\tProblema 1" << std::endl;
     Simplex *simplex = new Simplex(a, m1, m2, m3);
-    simplex->solve();
+    std::vector<float> par1 = simplex->solve();
+    for(size_t i = 0; i < par1.size(); i++)
+    {
+        std::cout << par1[i] << " ";
+    }
+    std::cout << std::endl;
+
+    simplex->insertConstraint(2, 1, 2);
+    simplex->printProblemMatrix();
 
     float c2[4][5] = 
         {{0.0, 2.0, -4.0, 0.0, 0.0},
@@ -38,7 +46,7 @@ int main()
          {0.0, 0.0, 0.0, 0.0, 0.0}};
 
     std::vector<std::vector<float>> a2;
-    for (int i = 0; i < 4; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         std::vector<float> col2;
         for (int j = 0; j < 5; j++)
@@ -50,5 +58,12 @@ int main()
     }
     std::cout << std::endl << "\t\tProblema 2" << std::endl;
     Simplex *simplex2 = new Simplex(a2, 0, 0, 2);
-    simplex2->solve();
+    std::vector<float> par2 = simplex2->solve();
+    for(size_t i = 0; i < par2.size(); i++)
+    {
+        std::cout << par2[i] << " ";
+    }
+    std::cout << std::endl;
+    simplex2->insertConstraint(2, 1, 3);
+    simplex2->printProblemMatrix();
 }
