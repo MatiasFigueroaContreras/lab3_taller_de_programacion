@@ -66,4 +66,8 @@ int main()
     std::cout << std::endl;
     simplex2->insertConstraint(2, 1, 3);
     simplex2->printProblemMatrix();
+
+    std::cout << std::endl << "\t\tProblema 3" << std::endl;
+    Simplex *simplex3 = new Simplex("ejemplo.txt");
+    simplex3->solve();
 }

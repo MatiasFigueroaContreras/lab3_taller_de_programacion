@@ -11,6 +11,64 @@
 */
 Simplex::Simplex(std::string fileName)
 {
+    std::string line;
+    std::fstream txtStream(fileName);
+    std::stringstream charStream;
+    std::string stringNumber;
+
+    if (!txtStream.is_open())
+    {
+        throw std::invalid_argument("El archivo ingresado no existe.");
+    }
+
+    getline(txtStream, line);
+    charStream << line;
+    getline(charStream, stringNumber, ' ');
+    this->m1 = stoi(stringNumber);
+    getline(charStream, stringNumber, ' ');
+    this->m2 = stoi(stringNumber);
+    getline(charStream, stringNumber, ' ');
+    this->m3 = stoi(stringNumber);
+
+    while (getline(txtStream, line))
+    {
+        charStream.clear();
+        charStream << line;
+        std::vector<float> function;
+        while (getline(charStream, stringNumber, ' '))
+        {
+            function.push_back(stof(stringNumber));
+        }
+        this->a.push_back(function);
+    }
+    this->n = a[0].size() - 1;
+    this->m = m1 + m2 + m3;
+    if (m != (int)a.size() - 1)
+    {
+        throw std::invalid_argument("El numero de restricciones ingresados no coincide con la matriz dada.");
+    }
+
+    for (int i = 1; i <= m; i++)
+    {
+        if (a[i][0] < 0.0 || (int)a[i].size() != n + 1)
+        {
+            // Error al crear el Simplex, ya que no se permiten
+            // constantes negativas para las restricciones, o el
+            // numero de columnas no coincide para todas las filas.
+            throw std::invalid_argument("La matriz ingresada no es valida.");
+        }
+    }
+
+    std::vector<float> function;
+    for (int i = 0; i <= n; i++)
+    {
+        function.push_back(0.0);
+    }
+
+    this->a.push_back(function);
+    this->initialA = a;
+    this->isSolved = false;
+    txtStream.close();
 }
 
 /*
@@ -34,7 +92,7 @@ Simplex::Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3)
         {
             // Error al crear el Simplex, ya que no se permiten
             // constantes negativas para las restricciones.
-            throw std::invalid_argument("Bad input tableau");
+            throw std::invalid_argument("La matriz ingresada no es valida.");
         }
     }
 
@@ -275,7 +333,7 @@ void Simplex::maxValue(int mm, std::vector<int> ll, int nll, int iabf, int *kp, 
 }
 
 /*
-    Descripcion: este metodo encuentra la fila en donde se 
+    Descripcion: este metodo encuentra la fila en donde se
         encuentra el elemento que sirve como pivote.
     Parametros:
         -ip: direccion donde se guardara la fila del elemento pivote.
@@ -494,11 +552,11 @@ void Simplex::printSolution()
         int nm1m2;
         if (icase == 1)
         {
-            std::cout << "unbounded objective function" << std::endl;
+            std::cout << "No existe limite para la funcion a maximizar." << std::endl;
         }
         else if (icase == -1)
         {
-            std::cout << "no solutions satisfy constraints given" << std::endl;
+            std::cout << "No hay solucion que cumpla con las restricciones." << std::endl;
         }
         else
         {
@@ -558,6 +616,6 @@ void Simplex::printSolution()
     }
     else
     {
-        std::cout << "It is not solved" << std::endl;
+        std::cout << "No esta resuelto." << std::endl;
     }
 }
