@@ -30,12 +30,13 @@ int main()
     std::cout << "\t\tProblema 1" << std::endl;
     Simplex *simplex = new Simplex(a, m1, m2, m3);
     std::vector<float> par1 = simplex->solve();
+    std::cout << std::endl <<"Resultado problema 1 con valor maximo y sus parametros asociados:" << std::endl;
     for(size_t i = 0; i < par1.size(); i++)
     {
         std::cout << par1[i] << " ";
     }
     std::cout << std::endl;
-
+    std::cout << std::endl << "Matriz problema 1 agregando restriccion:" << std::endl;
     simplex->insertConstraint(2, 1, 2);
     simplex->printProblemMatrix();
 
@@ -59,11 +60,13 @@ int main()
     std::cout << std::endl << "\t\tProblema 2" << std::endl;
     Simplex *simplex2 = new Simplex(a2, 0, 0, 2);
     std::vector<float> par2 = simplex2->solve();
+    std::cout << std::endl <<"Resultado problema 2 con valor maximo y sus parametros asociados:" << std::endl;
     for(size_t i = 0; i < par2.size(); i++)
     {
         std::cout << par2[i] << " ";
     }
     std::cout << std::endl;
+    std::cout << std::endl << "Matriz problema 2 agregando restriccion:" << std::endl;
     simplex2->insertConstraint(2, 1, 3);
     simplex2->printProblemMatrix();
 

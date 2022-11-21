@@ -8,8 +8,8 @@
 /*
     Descripcion de la clase Simplex:
     Esta clase representa un solucionador de problemas de optimizacion
-    lineal, mediante el metodo Simplex. este busca maximizar una
-    funcion con restricciones asociadas.
+    lineal con variables reales [x1,....,xn]., mediante el metodo Simplex. 
+    este busca maximizar una funcion con restricciones asociadas.
 */
 class Simplex
 {
