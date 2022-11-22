@@ -20,6 +20,7 @@ private:
     int icase;
     std::vector<int> izrov;
     std::vector<int> iposv;
+    std::vector<float> solution;
     int simplx();
     void maxValue(int mm, std::vector<int> ll, int nll, int iabf, int *kp, float *bmax);
     void locatePivot(int *ip, int kp);
@@ -39,6 +40,7 @@ public:
     std::vector<float> solve();
     void insertConstraint(float b, int var, int type);
     Simplex *copy();
+    std::vector<float> getSolution();
     void printProblemMatrix();
     void printSolution();
 };

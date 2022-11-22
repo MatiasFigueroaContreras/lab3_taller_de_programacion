@@ -518,6 +518,16 @@ Simplex *Simplex::copy()
     return s;
 }
 
+std::vector<float> Simplex::getSolution()
+{
+    if (isSolved && icase == 0)
+    {
+        return solution;
+    }
+    std::vector<float> empty;
+    return empty;
+}
+
 /*
     Descripcion: este metodo permite imprimir la matriz
         que representa al problema.
