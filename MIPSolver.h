@@ -9,6 +9,6 @@ public:
     MIPSolver();
     ~MIPSolver();
     std::vector<float> solve(Simplex *originalProblem);
-    int getMinValue(std::vector<float> solution);
-    int getVarCloseInt(std::vector<float> solution);
+    int getlowerBound(Simplex *problem);
+    int getFarthestIntegerVariable(std::vector<float> solution);
 };

@@ -123,22 +123,23 @@ std::vector<float> Simplex::solve()
 {
     icase = simplx();
     isSolved = true;
-    printSolution();
+    // printSolution();
     if (icase != 0)
     {
-        std::vector<float> p;
-        return p; // No hay solucion
+        std::vector<float> emptyVector;
+        return emptyVector; // No hay solucion
     }
 
     std::vector<float> parameters(n + 1, 0.0);
     parameters[0] = a[0][0];
-    for (int i = 0; i < n && i < m; i++)
+    for (int i = 0; i < m; i++) // Error
     {
         if (iposv[i] < n)
         {
             parameters[iposv[i] + 1] = a[i + 1][0];
         }
     }
+    solution = parameters;
 
     return parameters;
 }
@@ -479,7 +480,6 @@ void Simplex::insertConstraint(float b, int var, int type)
     switch (type)
     {
     case 1:
-        std::cout << "p" << std::endl;
         this->initialA.insert(this->initialA.begin() + m1 + 1, constraint);
         m1++;
         break;
@@ -498,6 +498,7 @@ void Simplex::insertConstraint(float b, int var, int type)
     m++;
     isSolved = false;
     a = initialA;
+    solution.clear();
 }
 
 /*
@@ -515,6 +516,7 @@ Simplex *Simplex::copy()
     s->isSolved = this->isSolved;
     s->icase = this->icase;
     s->a = this->a;
+    s->solution = this->solution;
     return s;
 }
 
