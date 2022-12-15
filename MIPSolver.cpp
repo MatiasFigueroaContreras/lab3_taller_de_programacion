@@ -1,5 +1,11 @@
 #include "MIPSolver.h"
 
+/*
+    Metodo: Constructor
+    Descripcion: este metodo permite crear un objeto MIPSolver.
+    Parametros: no posee.
+    Retorno: La direccion del objeto creado.
+*/
 MIPSolver::MIPSolver()
 {
 }
@@ -8,15 +14,29 @@ MIPSolver::~MIPSolver()
 {
 }
 
-std::vector<float> MIPSolver::solve(Simplex *originalProblem)
+/*
+    Metodo:
+    Descripcion: este metodo resuelve un problema de programacion
+        lineal entera.
+    Parametros:
+        -originalProblem: problema a resolver.
+    Retorno:
+        -Si encuntra solucion: Arreglo con el valor maximizado y los valores 
+            enteros de los parametros de la funcion a maximizar.
+        -Si NO encuntra solucion: Arreglo vacio.
+*/
+std::vector<float> MIPSolver::solve(Simplex originalProblem)
 {
-    std::multimap<float, Simplex *, std::greater<float>> heap;
-    std::multimap<float, Simplex *, std::greater<float>>::iterator currentItr;
-    Simplex *currentProblem, *copyProblem1, *copyProblem2;
+    std::multimap<float, Simplex, std::greater<float>> heap;
+    std::multimap<float, Simplex, std::greater<float>>::iterator currentItr;
     std::vector<float> currentSolution, solutionProblem1, solutionProblem2;
     float upperBound;
     int lowerBound, varIndex, e;
-    currentSolution = originalProblem->solve();
+    std::cout << "1" << std::endl;
+    currentSolution = originalProblem.solve();
+    originalProblem.printSolution();
+    std::cout << "2" << std::endl;
+
     if(!currentSolution.empty())
     {
         upperBound = currentSolution[0];
@@ -27,29 +47,26 @@ std::vector<float> MIPSolver::solve(Simplex *originalProblem)
     {
         currentItr = heap.begin();
         upperBound = currentItr->first;
-        currentProblem = currentItr->second;
-        currentSolution = currentProblem->getSolution();
-        lowerBound = getlowerBound(currentProblem);
+        Simplex currentProblem = currentItr->second;
+        currentSolution = currentProblem.getSolution();
+        lowerBound = getLowerBound(currentProblem);
         heap.erase(currentItr);
-        currentProblem->printSolution();
+        currentProblem.printSolution(); // Eliminar
         std::cout << "Lower Bound: " << lowerBound << " Upper Bound: " << upperBound << std::endl;
         if ((float)lowerBound == upperBound)
         {
-            // Borrar Simplex's que se quedan en el heap
             std::cout << "Solucion encontrada" << std::endl;
-            // delete currentProblem;
             return currentSolution;
         }
 
         varIndex = getFarthestIntegerVariable(currentSolution);
-        // std::cout << varIndex << std::endl;
         e = (int) currentSolution[varIndex];
-        copyProblem1 = currentProblem->copy();
-        copyProblem2 = currentProblem->copy();
-        copyProblem1->insertConstraint(e, varIndex, 1);
-        copyProblem2->insertConstraint(e + 1, varIndex, 2);
-        solutionProblem1 = copyProblem1->solve();
-        solutionProblem2 = copyProblem2->solve();
+        Simplex copyProblem1 = currentProblem.copy();
+        Simplex copyProblem2 = currentProblem.copy();
+        copyProblem1.insertConstraint(e, varIndex, 1);
+        copyProblem2.insertConstraint(e + 1, varIndex, 2);
+        solutionProblem1 = copyProblem1.solve();
+        solutionProblem2 = copyProblem2.solve();
         std::cout << "Rama 1: " << "x" << varIndex << " <= " << e;
         if(!solutionProblem1.empty())
         {
@@ -59,7 +76,6 @@ std::vector<float> MIPSolver::solve(Simplex *originalProblem)
         else
         {
             std::cout << " NO Tiene solucion" << std::endl;
-            delete copyProblem1;
         }
 
         std::cout << "Rama 2: " << "x" << varIndex << " >= " << e + 1;
@@ -71,10 +87,7 @@ std::vector<float> MIPSolver::solve(Simplex *originalProblem)
         else
         {
             std::cout << " NO Tiene solucion" << std::endl;
-            delete copyProblem2;
         }
-
-        delete currentProblem;
     }
     
     std::cout << "El problema no tiene solucion" << std::endl;
@@ -82,18 +95,37 @@ std::vector<float> MIPSolver::solve(Simplex *originalProblem)
     return emptyVector;
 }
 
-int MIPSolver::getlowerBound(Simplex *problem)
+/*
+    Metodo:
+    Descripcion: este metodo obtiene el limite inferior de la
+        solucion de un problema simplex, tomando la parte entera
+        de los parametros para calcular la funcion maximizada con
+        estos valores.
+    Parametros:
+        -problem: problema a calcular el limite inferior
+    Retorno: limite inferior de la solucion, es decir la funcion
+        maximizada con valores enteros de la solucion.
+*/
+int MIPSolver::getLowerBound(Simplex problem)
 {
-    int lowerBound = problem->initialA[0][0];
-    std::vector<float> solution = problem->getSolution();
+    int lowerBound = problem.initialA[0][0];
+    std::vector<float> solution = problem.getSolution();
     for(size_t i = 1; i < solution.size(); i++)
     {
-        lowerBound += problem->initialA[0][i] * (int) solution[i];
+        lowerBound += problem.initialA[0][i] * (int) solution[i];
     }
 
     return lowerBound;
 }
 
+/*
+    Metodo:
+    Descripcion: este metodo obtiene el valor mas lejano a un entero,
+        dado el vector solucion de un problema resuelto por Simplex. 
+    Parametros:
+        -solution: solucion del problema resuelto por Simplex
+    Retorno: indice del valor mas lejano a un entero.
+*/
 int MIPSolver::getFarthestIntegerVariable(std::vector<float> solution)
 {
     int var = -1;

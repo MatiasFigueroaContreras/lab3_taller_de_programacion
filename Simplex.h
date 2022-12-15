@@ -39,7 +39,7 @@ public:
     ~Simplex();
     std::vector<float> solve();
     void insertConstraint(float b, int var, int type);
-    Simplex *copy();
+    Simplex copy();
     std::vector<float> getSolution();
     void printProblemMatrix();
     void printSolution();

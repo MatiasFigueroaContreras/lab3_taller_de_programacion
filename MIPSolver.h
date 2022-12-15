@@ -8,7 +8,7 @@ private:
 public:
     MIPSolver();
     ~MIPSolver();
-    std::vector<float> solve(Simplex *originalProblem);
-    int getlowerBound(Simplex *problem);
+    std::vector<float> solve(Simplex originalProblem);
+    int getLowerBound(Simplex problem);
     int getFarthestIntegerVariable(std::vector<float> solution);
 };

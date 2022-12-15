@@ -111,19 +111,19 @@ Simplex::~Simplex()
 }
 
 /*
-    Descripcion: este metodo permite resolver el problema invocando al
-        metodo de simplex, imprimiendo la matriz solucion y retornando
-        un arreglo con el valor maximizado y los valores de los parametros
-        de la funcion a maximizar.
+    Descripcion: este metodo permite resolver el problema de programacion
+        lineal invocando al metodo de simplex.
     Parametros: No posee.
-    Retorno: Arreglo con el valor maximizado y los valores de los
-        parametros de la funcion a maximizar.
+    Retorno: 
+       -Si encuntra solucion: Arreglo con el valor maximizado y los 
+        valores de los parametros de la funcion a maximizar.
+       -Si NO encuntra solucion: Arreglo vacio.
+
 */
 std::vector<float> Simplex::solve()
 {
     icase = simplx();
     isSolved = true;
-    // printSolution();
     if (icase != 0)
     {
         std::vector<float> emptyVector;
@@ -132,7 +132,7 @@ std::vector<float> Simplex::solve()
 
     std::vector<float> parameters(n + 1, 0.0);
     parameters[0] = a[0][0];
-    for (int i = 0; i < m; i++) // Error
+    for (int i = 0; i < m; i++)
     {
         if (iposv[i] < n)
         {
@@ -188,7 +188,6 @@ int Simplex::simplx()
             }
             a[m + 1][k] = -q1;
         }
-
         for (;;)
         {
             maxValue(m + 1, l1, nl1, 0, &kp, &bmax);
@@ -237,7 +236,6 @@ int Simplex::simplx()
                         break;
                     }
                 }
-
                 --nl1;
                 for (is = k; is < nl1; is++)
                 {
@@ -270,13 +268,11 @@ int Simplex::simplx()
         {
             return 0; // icase = 0
         }
-
         locatePivot(&ip, kp);
         if (ip == -1)
         {
             return 1; // icase  = 1
         }
-
         exchangeParameters(m, n, ip, kp);
         is = izrov[kp];
         izrov[kp] = iposv[ip];
@@ -357,7 +353,7 @@ void Simplex::locatePivot(int *ip, int kp)
         }
     }
 
-    if (i > m)
+    if (i + 1 > m)
     {
         return;
     }
@@ -505,18 +501,18 @@ void Simplex::insertConstraint(float b, int var, int type)
     Descripcion: este metodo permite copiar el objeto con sus
         respectivos valores.
     Parametros: No tiene.
-    Retorno: La direccion del objeto creado con los valores
+    Retorno: El objeto creado con los valores
         del objeto copiado.
 */
-Simplex *Simplex::copy()
+Simplex Simplex::copy()
 {
-    Simplex *s = new Simplex(initialA, m1, m2, m3);
-    s->izrov = this->izrov;
-    s->iposv = this->iposv;
-    s->isSolved = this->isSolved;
-    s->icase = this->icase;
-    s->a = this->a;
-    s->solution = this->solution;
+    Simplex s = Simplex(initialA, m1, m2, m3);
+    s.izrov = this->izrov;
+    s.iposv = this->iposv;
+    s.isSolved = this->isSolved;
+    s.icase = this->icase;
+    s.a = this->a;
+    s.solution = this->solution;
     return s;
 }
 
