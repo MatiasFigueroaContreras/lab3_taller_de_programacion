@@ -372,6 +372,8 @@ void Simplex::locatePivot(int *ip, int kp)
             }
             else if (q == q1)
             {
+                qp = -1;
+                q0 = -1;
                 for (k = 0; k < n; k++)
                 {
                     qp = -a[*ip + 1][k + 1] / a[*ip + 1][kp];

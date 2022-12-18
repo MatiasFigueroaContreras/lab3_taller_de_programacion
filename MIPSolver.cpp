@@ -32,10 +32,7 @@ std::vector<float> MIPSolver::solve(Simplex originalProblem)
     std::vector<float> currentSolution, solutionProblem1, solutionProblem2;
     float upperBound;
     int lowerBound, varIndex, e;
-    std::cout << "1" << std::endl;
     currentSolution = originalProblem.solve();
-    originalProblem.printSolution();
-    std::cout << "2" << std::endl;
 
     if(!currentSolution.empty())
     {
@@ -51,11 +48,8 @@ std::vector<float> MIPSolver::solve(Simplex originalProblem)
         currentSolution = currentProblem.getSolution();
         lowerBound = getLowerBound(currentProblem);
         heap.erase(currentItr);
-        currentProblem.printSolution(); // Eliminar
-        std::cout << "Lower Bound: " << lowerBound << " Upper Bound: " << upperBound << std::endl;
         if ((float)lowerBound == upperBound)
         {
-            std::cout << "Solucion encontrada" << std::endl;
             return currentSolution;
         }
 
@@ -67,30 +61,17 @@ std::vector<float> MIPSolver::solve(Simplex originalProblem)
         copyProblem2.insertConstraint(e + 1, varIndex, 2);
         solutionProblem1 = copyProblem1.solve();
         solutionProblem2 = copyProblem2.solve();
-        std::cout << "Rama 1: " << "x" << varIndex << " <= " << e;
         if(!solutionProblem1.empty())
         {
-            std::cout << " Tiene solucion" << std::endl;
             heap.emplace(solutionProblem1[0], copyProblem1);
         }
-        else
-        {
-            std::cout << " NO Tiene solucion" << std::endl;
-        }
 
-        std::cout << "Rama 2: " << "x" << varIndex << " >= " << e + 1;
         if(!solutionProblem2.empty())
         {
-            std::cout << " Tiene solucion" << std::endl;
             heap.emplace(solutionProblem2[0], copyProblem2);
-        }
-        else
-        {
-            std::cout << " NO Tiene solucion" << std::endl;
         }
     }
     
-    std::cout << "El problema no tiene solucion" << std::endl;
     std::vector<float> emptyVector;
     return emptyVector;
 }

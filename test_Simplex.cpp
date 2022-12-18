@@ -72,5 +72,11 @@ int main()
 
     std::cout << std::endl << "\t\tProblema 3" << std::endl;
     Simplex *simplex3 = new Simplex("ejemplo.txt");
-    simplex3->solve();
+    std::vector<float> par3 = simplex3->solve();
+    std::cout << std::endl <<"Resultado problema 3 con valor maximo y sus parametros asociados:" << std::endl;
+    for(size_t i = 0; i < par2.size(); i++)
+    {
+        std::cout << par2[i] << " ";
+    }
+    std::cout << std::endl;
 }
