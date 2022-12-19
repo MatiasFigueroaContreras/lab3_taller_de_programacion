@@ -106,6 +106,11 @@ Simplex::Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3)
     this->isSolved = false;
 }
 
+/*
+    Descripcion: este metodo permite eliminar el objeto.
+    Parametros: no posee.
+    Retorno: no posee.
+*/
 Simplex::~Simplex()
 {
 }

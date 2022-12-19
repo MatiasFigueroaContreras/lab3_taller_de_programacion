@@ -10,6 +10,11 @@ MIPSolver::MIPSolver()
 {
 }
 
+/*
+    Descripcion: este metodo permite eliminar el objeto.
+    Parametros: no posee.
+    Retorno: no posee.
+*/
 MIPSolver::~MIPSolver()
 {
 }
